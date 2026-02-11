@@ -1,0 +1,11 @@
+Y= int(input ('Enter 4-digit integer; '))
+CenturyYear = (Y%100 == 0)
+if CenturyYear:
+  LeapYear = (Y%400 == 0)
+else:
+  LeapYear = (Y%4 == 0)
+
+if LeapYear:
+    print(Y, "is a leap year.")
+else:
+    print(Y, "is NOT a leap year.")
