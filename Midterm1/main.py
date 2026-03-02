@@ -15,13 +15,15 @@ def load_words():
     print(" ", len(wordlist), "words loaded.")
     return wordlist
 
+
 def choose_word(wordlist):
     return random.choice(wordlist)
+
 
 wordlist = load_words()
 
 # -----------------------------------
-# Helper Functions
+# Core Helper Functions
 # -----------------------------------
 
 def is_word_guessed(secret_word, letters_guessed):
@@ -53,33 +55,40 @@ def get_available_letters(letters_guessed):
 # Hint Helper Functions
 # -----------------------------------
 
-def match_with_gaps(my_word, other_word):
-    # Remove spaces ( "_ p p _ e" -> "_pp_e" )
+def match_with_gaps(my_word, other_word, letters_guessed):
+    """Return True if all letters match the current pattern and word does not contain letters guessed incorrectly."""
+    
     my_word = my_word.replace(" ", "")
 
-    # Words must be same length
     if len(my_word) != len(other_word):
         return False
 
+    # Letters guessed incorrectly (not revealed in the pattern)
+    wrong_letters = [l for l in letters_guessed if l not in my_word]
+
     for i in range(len(my_word)):
-        # If letter is revealed, it must match exactly
         if my_word[i] != "_":
+            # Revealed letters must match exactly
             if my_word[i] != other_word[i]:
                 return False
         else:
-            # Blank spaces cannot contain letters
-            # that already appear elsewhere in revealed pattern
+            # Blank positions cannot be a revealed letter elsewhere in the pattern
             if other_word[i] in my_word:
                 return False
+
+    # Exclude words containing letters guessed incorrectly
+    for letter in wrong_letters:
+        if letter in other_word:
+            return False
 
     return True
 
 
-def show_possible_matches(my_word):
+def show_possible_matches(my_word, letters_guessed):
     matches = []
 
     for word in wordlist:
-        if match_with_gaps(my_word, word):
+        if match_with_gaps(my_word, word, letters_guessed):
             matches.append(word)
 
     if len(matches) == 0:
@@ -97,7 +106,6 @@ def hangman(secret_word):
 
     guesses_remaining = 6
     warnings_remaining = 3
-    hints_remaining = 1
     letters_guessed = []
 
     print("Welcome to the game Hangman!")
@@ -109,16 +117,12 @@ def hangman(secret_word):
         print("You have", guesses_remaining, "guesses left.")
         print("Available letters:", get_available_letters(letters_guessed))
 
-        guess = input("Please guess a letter: ").lower()
+        guess = input("Please guess a letter (or * for hint): ").lower()
 
-        # ---------------- HINT ----------------
+        # ---------------- UNLIMITED SMART HINT ----------------
         if guess == "*":
-            if hints_remaining > 0:
-                hints_remaining -= 1
-                current_pattern = get_guessed_word(secret_word, letters_guessed)
-                show_possible_matches(current_pattern)
-            else:
-                print("Sorry, you have already used your hint.")
+            current_pattern = get_guessed_word(secret_word, letters_guessed)
+            show_possible_matches(current_pattern, letters_guessed)
             print("-------------")
             continue
 
@@ -148,7 +152,6 @@ def hangman(secret_word):
             print("-------------")
             continue
 
-        # Add valid guess
         letters_guessed.append(guess)
 
         # CORRECT GUESS
