@@ -9,9 +9,9 @@ WORDLIST_FILENAME = "words.txt"
 
 def load_words():
     print("Loading word list from file...")
-    inFile = open(WORDLIST_FILENAME, 'r')
-    line = inFile.readline()
-    wordlist = line.split()
+    with open(WORDLIST_FILENAME, 'r') as inFile:
+        line = inFile.readline()
+        wordlist = line.split()
     print(" ", len(wordlist), "words loaded.")
     return wordlist
 
@@ -54,17 +54,23 @@ def get_available_letters(letters_guessed):
 # -----------------------------------
 
 def match_with_gaps(my_word, other_word):
+    # Remove spaces ( "_ p p _ e" -> "_pp_e" )
     my_word = my_word.replace(" ", "")
 
+    # Words must be same length
     if len(my_word) != len(other_word):
         return False
 
     for i in range(len(my_word)):
-        if my_word[i] == "_":
+        # If letter is revealed, it must match exactly
+        if my_word[i] != "_":
+            if my_word[i] != other_word[i]:
+                return False
+        else:
+            # Blank spaces cannot contain letters
+            # that already appear elsewhere in revealed pattern
             if other_word[i] in my_word:
                 return False
-        elif my_word[i] != other_word[i]:
-            return False
 
     return True
 
@@ -109,7 +115,8 @@ def hangman(secret_word):
         if guess == "*":
             if hints_remaining > 0:
                 hints_remaining -= 1
-                show_possible_matches(get_guessed_word(secret_word, letters_guessed))
+                current_pattern = get_guessed_word(secret_word, letters_guessed)
+                show_possible_matches(current_pattern)
             else:
                 print("Sorry, you have already used your hint.")
             print("-------------")
@@ -119,7 +126,7 @@ def hangman(secret_word):
         if not guess.isalpha() or len(guess) != 1:
             if warnings_remaining > 0:
                 warnings_remaining -= 1
-                print("Oops! That is not a valid letter. You can only input an alphabet.")
+                print("Oops! That is not a valid letter.")
                 print("You have", warnings_remaining, "warnings left.")
             else:
                 guesses_remaining -= 1
